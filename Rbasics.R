@@ -41,6 +41,7 @@ dev.off()
 
 ## Tidyverse
 library(tidyverse)
+library(data.table)
 
 mpg %>% filter(manufacturer=="audi") %>% 
   group_by(model) %>% 
@@ -84,7 +85,156 @@ starwars%>% group_by(species, gender) %>% summarise(mean_height = mean(height, n
 ## summarize as long as numeric
 starwars %>% group_by(species) %>% summarise(across(where(is.numeric), mean, na.rm = T))
 
-tarwars %>% slice(c(1,5)) ## row 1 and 5
+starwars %>% slice(c(1,5)) ## row 1 and 5
+
+starwars %>% filter(gender=="female") %>% pull(height)
+
+starwars %>% group_by(species) %>% mutate(num = n())
+
+starwars%>% count(species)
+
+library(nycflights13)
+left_join(flights, planes) %>%
+  select(year, month, day, dep_time, arr_time, carrier, flight, tailnum, type, model)
+
+left_join(
+  flights,
+  planes %>% rename(year_built = year), ## Not necessary w/ below line, but helpful
+  by = "tailnum" ## Be specific about the joining column
+)
+
+starwars_dt = as.data.table(starwars)
+
+starwars_dt[species== "Human", mean(height, na.rm = T), by = homeworld] ## data.table
+
+starwars %>% filter(species== "Human")%>% group_by(homeworld) %>% summarise(mean_height = mean(height))
+
+## Syntax for tables = DT[i,j,by], i = On which rows, j = What to do, by = Grouped by what
+
+DT = data.table(x = 1:2)
+
+DT[, x_sq := x^2][]
+
+DT2 = data.table(a = -2:2, b = LETTERS[1:5])
+
+DT2[a<0, b:=NA][]
+
+
+starwars_dt[, mean(height, na.rm = T), by = species]
+
+starwars_dt[, mean(height, na.rm = T), by = height>190]
+
+starwars_dt[, species_n := .N, by = species][]
+
+starwars_dt[, .(mean_height = mean(height, na.rm = T)), by = .(species, homeworld)] %>% head(4)
+
+
+starwars_dt[species== 'Human']
+
+## To add, delete, or change columns in data.table, we use the := operator.
+
+
+DT = data.table(x = 1:2)
+
+DT[, x_sq := x^2][]
+
+
+DT_copy = copy(DT)
+
+DT_copy[, x_sq := NULL]
+
+DT2 = data.table(a = -2:2, b = LETTERS[1:5])
+DT2[a<0, b:= NA][]
+
+## To modify multiple columns simultaneously
+DT[, ':=' (y= 3:4, y_name = c("three", "four"))][]
+
+DT[, z:=5:6][, z_sq:=z^2][]
+
+## But if you prefer the magrittr pipe, then that's also possible. Just prefix each step with .:
+
+DT %>% .[,xyz := x+y+z] %>% .[, xyz_sq := xyz^2] %>% .[]
+
+
+DT[, y_name := NULL][] ## remove column
+
+
+starwars_dt[1:2, c(1:3,10)][]
+
+starwars_dt[, c("name", "height", "mass", "homeworld")] ## Also works
+starwars_dt[, list(name, height, mass, homeworld)] ## So does this
+
+##You can think of it as one of data.table's syntactical quirks. But, really, it's just there to give you more options. You can often — if not always — use these three forms interchangeably in data.table:
+##.(var1, var2, ...)
+##list(var1, var2, ...)
+##c("var1", "var2", ...)
+
+## exclude columns
+
+starwars_dt[, !c("name", "height")]
+
+##renaming
+setnames(starwars_dt, old = c("name", "homeworld"), new = c ("alias" , "crib"))[]
+
+
+
+starwars_dt[, mean(height, na.rm=T)]
+
+starwars_dt[, mean_height := mean(height, na.rm = T)] %>% .[1:5, .(alias, height, mean_height)]
+
+starwars_dt[, mean(height, na.rm = T), by = species]
+
+
+starwars_dt[, species_height:= mean(height, na.rm =T), by = species][]
+
+starwars_dt[, species_n := .N, by = species][] %>% .[1:3,]
+
+starwars_dt[, mean_height:= mean(height, na.rm = T), by = c("species", "crib")] %>% .[1:3,]
+
+
+starwars_dt[, .(mean(height, na.rm = T), mean(mass, na.rm = T), mean(birth_year, na.rm = T)), by = species][]
+
+## better way
+starwars_dt[, lapply(.SD, mean, na.rm =T), .SDcols = c("height", "mass", "birth_year" ), by = species]%>% head(2)
+
+DT[, lapply(.SD, mean)][]
+
+
+## Functions 
+
+square <- function(x) {
+  x^2
+}
+
+## square <- function(x) x^2 
+square(3)
+
+
+square2 <- function(x = 1) {
+  x_sq <- x^2
+  df <- tibble(val = x, val2 = x_sq)
+  return(df)
+}
+square2() ##default value =2 
+
+square(2)
+
+square2(1:5)
+
+square2(c(2,4))
+
+for(i in 1:10) print(LETTERS[i])
+
+kelvin <- 300:305
+
+fahrenheit <- NULL
+# fahrenheit <- vector("double", length(kelvin)) ## Better than the above. Why?
+for(k in 1:length(kelvin)) {
+  fahrenheit[k] <- kelvin[k] * 9/5 - 459.67
+}
+fahrenheit
+
+## try using apply functions
 
 
 
@@ -93,6 +243,34 @@ tarwars %>% slice(c(1,5)) ## row 1 and 5
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+  
+  
 
 
 
